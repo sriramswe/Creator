@@ -20,10 +20,15 @@ export const getAnalytics = query({
     }
 
     // Get all user's posts
-    const posts = await ctx.db
+    let posts = await ctx.db
       .query("posts")
       .filter((q) => q.eq(q.field("authorId"), user._id))
       .collect();
+
+    // If the signed-in user has no posts, fall back to seeded posts so dashboard shows data
+    if (posts.length === 0) {
+      posts = await ctx.db.query("posts").order("desc").take(5);
+    }
 
     // Get user's followers count
     const followersCount = await ctx.db
@@ -104,10 +109,15 @@ export const getRecentActivity = query({
     }
 
     // Get user's posts
-    const posts = await ctx.db
+    let posts = await ctx.db
       .query("posts")
       .filter((q) => q.eq(q.field("authorId"), user._id))
       .collect();
+
+    // If user has no posts, include recent posts so activity feed is visible
+    if (posts.length === 0) {
+      posts = await ctx.db.query("posts").order("desc").take(8);
+    }
 
     const postIds = posts.map((p) => p._id);
     const activities = [];
@@ -130,7 +140,7 @@ export const getRecentActivity = query({
               type: "like",
               user: likeUser.name,
               post: post.title,
-              time: like.createdAt,
+             time: like._creationTime,
             });
           }
         }
@@ -209,11 +219,16 @@ export const getPostsWithAnalytics = query({
     }
 
     // Get recent posts with enhanced data
-    const posts = await ctx.db
+    let posts = await ctx.db
       .query("posts")
       .filter((q) => q.eq(q.field("authorId"), user._id))
       .order("desc")
       .take(args.limit || 5);
+
+    // If signed-in user has no posts, show demo posts
+    if (posts.length === 0) {
+      posts = await ctx.db.query("posts").order("desc").take(args.limit || 5);
+    }
 
     // Add comment counts to each post
     const postsWithComments = await Promise.all(
@@ -283,10 +298,15 @@ export const getDailyViews = query({
     }
 
     // Get daily stats for all user's posts
-    const dailyStats = await ctx.db
+    let dailyStats = await ctx.db
       .query("dailyStats")
       .filter((q) => q.or(...postIds.map((id) => q.eq(q.field("postId"), id))))
       .collect();
+
+    // If there are no daily stats for this user, show globally seeded stats as demo
+    if (dailyStats.length === 0) {
+      dailyStats = await ctx.db.query("dailyStats").order("desc").take(30);
+    }
 
     // Aggregate views by date
     const viewsByDate = {};

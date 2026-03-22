@@ -23,9 +23,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/convex/_generated/api";
-import { useConvexQuery } from "@/hooks/use-convex-query";
+
 import { formatDistanceToNow } from "date-fns";
 import DailyViewsChart from "@/components/daily-views-chart";
+import { useConvexQuery } from "@/hooks/use-convex-query";
 
 export default function DashboardPage() {
   // Fetch real data
@@ -40,14 +41,17 @@ export default function DashboardPage() {
     api.dashboard.getRecentActivity,
     { limit: 8 }
   );
+  console.log("Activity time:", recentActivity?.time);
   const { data: dailyViewsData, isLoading: chartLoading } = useConvexQuery(
     api.dashboard.getDailyViews
   );
 
   // Format time relative to now
   const formatTime = (timestamp) => {
-    return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
-  };
+  if (!timestamp) return "Just now";
+  return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+};
+  
 
   // Loading states
   if (analyticsLoading) {

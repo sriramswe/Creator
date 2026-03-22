@@ -1,28 +1,14 @@
 "use server";
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error("GEMINI_API_KEY is missing");
-}
+/**
+ * Generate Blog Content using Ollama (FREE, local AI)
+ */
 export async function generateBlogContent(title, category = "", tags = []) {
   try {
     if (!title || title.trim().length === 0) {
       throw new Error("Title is required to generate content");
     }
 
-  const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-pro",
-  generationConfig: {
-    temperature: 0.7,
-    topP: 0.9,
-    maxOutputTokens: 2048,
-  },
-});
-
-
-    // Create a detailed prompt for blog content generation
     const prompt = `
 Write a comprehensive blog post with the title: "${title}"
 
@@ -30,29 +16,37 @@ ${category ? `Category: ${category}` : ""}
 ${tags.length > 0 ? `Tags: ${tags.join(", ")}` : ""}
 
 Requirements:
-- Write engaging, informative content that matches the title
-- Use proper HTML formatting with headers (h2, h3), paragraphs, lists, and emphasis
-- Include 3-5 main sections with clear subheadings
-- Write in a conversational yet professional tone
-- Make it approximately 800-1200 words
-- Include practical insights, examples, or actionable advice where relevant
-- Use <h2> for main sections and <h3> for subsections
-- Use <p> tags for paragraphs
-- Use <ul> and <li> for bullet points when appropriate
-- Use <strong> and <em> for emphasis
-- Ensure the content is original and valuable to readers
-
-Do not include the title in the content as it will be added separately.
-Start directly with the introduction paragraph.
+- Write engaging, informative content
+- Use HTML tags: <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>
+- Include 3–5 sections
+- 800–1200 words
+- Add examples and insights
+- Do NOT include title
+- Start with introduction
 `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-  const content =
-  response.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    // Basic validation
+    const response = await fetch("http://localhost:11434/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "llama3", // make sure installed in Ollama
+        prompt: prompt,
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to connect to Ollama");
+    }
+
+    const data = await response.json();
+
+    const content = data.response;
+
     if (!content || content.trim().length < 100) {
-      throw new Error("Generated content is too short or empty");
+      throw new Error("Generated content is too short");
     }
 
     return {
@@ -60,103 +54,80 @@ Start directly with the introduction paragraph.
       content: content.trim(),
     };
   } catch (error) {
-    console.error("Gemini AI Error:", error);
-
-    // Handle specific error types
-    if (error.message?.includes("API key")) {
-      return {
-        success: false,
-        error: "AI service configuration error. Please try again later.",
-      };
-    }
-
-    if (error.message?.includes("quota") || error.message?.includes("limit")) {
-      return {
-        success: false,
-        error: "AI service is temporarily unavailable. Please try again later.",
-      };
-    }
+    console.error("AI Error:", error);
 
     return {
       success: false,
-      error: error.message || "Failed to generate content. Please try again.",
+      error: error.message || "Failed to generate content",
     };
   }
 }
 
+/**
+ * Improve Existing Content
+ */
 export async function improveContent(
   currentContent,
   improvementType = "enhance"
 ) {
   try {
     if (!currentContent || currentContent.trim().length === 0) {
-      throw new Error("Content is required for improvement");
+      throw new Error("Content is required");
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    let prompt = "";
+    let instruction = "";
 
     switch (improvementType) {
       case "expand":
-        prompt = `
-Take this blog content and expand it with more details, examples, and insights:
-
-${currentContent}
-
-Requirements:
-- Keep the existing structure and main points
-- Add more depth and detail to each section
-- Include practical examples and insights
-- Maintain the original tone and style
-- Return the improved content in the same HTML format
-`;
+        instruction = "Expand this content with more details, examples, and insights.";
         break;
-
       case "simplify":
-        prompt = `
-Take this blog content and make it more concise and easier to read:
-
-${currentContent}
-
-Requirements:
-- Keep all main points but make them clearer
-- Remove unnecessary complexity
-- Use simpler language where possible
-- Maintain the HTML formatting
-- Keep the essential information
-`;
+        instruction = "Simplify this content and make it easier to read.";
         break;
-
-      default: // enhance
-        prompt = `
-Improve this blog content by making it more engaging and well-structured:
-
-${currentContent}
-
-Requirements:
-- Improve the flow and readability
-- Add engaging transitions between sections
-- Enhance with better examples or explanations
-- Maintain the original HTML structure
-- Keep the same length approximately
-- Make it more compelling to read
-`;
+      default:
+        instruction = "Improve this content to make it more engaging and well-structured.";
     }
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const improvedContent = response.text();
+    const prompt = `
+${instruction}
+
+Content:
+${currentContent}
+
+Requirements:
+- Maintain HTML format
+- Keep structure clean
+- Improve readability
+`;
+
+    const response = await fetch("http://localhost:11434/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "llama3",
+        prompt: prompt,
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to connect to Ollama");
+    }
+
+    const data = await response.json();
 
     return {
       success: true,
-      content: improvedContent.trim(),
+      content: data.response.trim(),
     };
   } catch (error) {
-    console.error("Content improvement error:", error);
+    console.error("Improve Error:", error);
+
     return {
       success: false,
-      error: error.message || "Failed to improve content. Please try again.",
+      error: error.message || "Failed to improve content",
     };
   }
 }
