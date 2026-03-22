@@ -12,10 +12,10 @@ export default clerkMiddleware((auth, req) => {
   return NextResponse.next();
 });
 
-export const config = {
-  matcher: [
+// export const config = {
+//   matcher: [
 
-    "/((?!_next|dashboard|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/(api|trpc)(.*)",
-  ],
-};
+//     "/((?!_next|dashboard|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+//     "/(api|trpc)(.*)",
+//   ],
+// };
