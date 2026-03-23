@@ -1,12 +1,20 @@
 "use server";
 
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+
 /**
- * Generate Blog Content using Ollama (FREE, local AI)
+ * Generate Blog Content using Google Gemini API
  */
 export async function generateBlogContent(title, category = "", tags = []) {
   try {
     if (!title || title.trim().length === 0) {
       throw new Error("Title is required to generate content");
+    }
+
+    if (!process.env.GOOGLE_API_KEY) {
+      throw new Error("Google API key is not configured");
     }
 
     const prompt = `
@@ -25,25 +33,9 @@ Requirements:
 - Start with introduction
 `;
 
-    const response = await fetch("http://localhost:11434/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama3", // make sure installed in Ollama
-        prompt: prompt,
-        stream: false,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to connect to Ollama");
-    }
-
-    const data = await response.json();
-
-    const content = data.response;
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const result = await model.generateContent(prompt);
+    const content = result.response.text();
 
     if (!content || content.trim().length < 100) {
       throw new Error("Generated content is too short");
@@ -73,6 +65,10 @@ export async function improveContent(
   try {
     if (!currentContent || currentContent.trim().length === 0) {
       throw new Error("Content is required");
+    }
+
+    if (!process.env.GOOGLE_API_KEY) {
+      throw new Error("Google API key is not configured");
     }
 
     let instruction = "";
