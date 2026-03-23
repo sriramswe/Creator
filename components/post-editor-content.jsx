@@ -187,16 +187,26 @@ export default function PostEditorContent({
             {!hasContent ? (
               <Button
                 onClick={() => handleAI("generate")}
-                disabled={!hasTitle || isGenerating || isImproving}
+                disabled={!hasTitle || isGenerating}
                 variant="outline"
                 size="sm"
                 className="border-purple-500 text-purple-400 hover:bg-purple-500 hover:text-white disabled:opacity-50 w-full"
               >
                 <Wand2 className="h-4 w-4 mr-2" />
-                Generate Content with AI
+                {isGenerating ? "Generating..." : "Generate Content with AI"}
               </Button>
             ) : (
-              <div className="grid grid-cols-3 w-full gap-2">
+              <div className="grid grid-cols-4 w-full gap-2">
+                <Button
+                  onClick={() => handleAI("generate")}
+                  disabled={!hasTitle || isGenerating}
+                  variant="outline"
+                  size="sm"
+                  className="border-purple-500 text-purple-400 hover:bg-purple-500 hover:text-white disabled:opacity-50"
+                >
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  Generate
+                </Button>
                 {[
                   { type: "enhance", icon: Sparkles, color: "green" },
                   { type: "expand", icon: Plus, color: "blue" },
@@ -211,7 +221,7 @@ export default function PostEditorContent({
                     className={`border-${color}-500 text-${color}-400 hover:bg-${color}-500 hover:text-white disabled:opacity-50`}
                   >
                     <Icon className="h-4 w-4 mr-2" />
-                    AI {type.charAt(0).toUpperCase() + type.slice(1)}
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
                   </Button>
                 ))}
               </div>
