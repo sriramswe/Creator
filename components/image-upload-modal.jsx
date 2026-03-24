@@ -332,6 +332,76 @@ export default function ImageUploadModal({
               {/* Transformation Controls */}
               <div className="space-y-6">
                 <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-white flex items-center">
+                    <Wand2 className="h-5 w-5 mr-2" />
+                    AI Transformations
+                  </h3>
+
+                  {/* Background Removal */}
+                  <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-white font-medium">
+                        Remove Background
+                      </Label>
+                      <Button
+                        type="button"
+                        variant={
+                          watchedValues.backgroundRemoved
+                            ? "default"
+                            : "outline"
+                        }
+                        size="sm"
+                        onClick={() =>
+                          setValue(
+                            "backgroundRemoved",
+                            !watchedValues.backgroundRemoved
+                          )
+                        }
+                      >
+                        {watchedValues.backgroundRemoved ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <X className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-sm text-slate-400">
+                      AI-powered background removal
+                    </p>
+                  </div>
+
+                  {/* Drop Shadow */}
+                  <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-white font-medium">
+                        Drop Shadow
+                      </Label>
+                      <Button
+                        type="button"
+                        variant={
+                          watchedValues.dropShadow ? "default" : "outline"
+                        }
+                        size="sm"
+                        disabled={!watchedValues.backgroundRemoved}
+                        onClick={() =>
+                          setValue("dropShadow", !watchedValues.dropShadow)
+                        }
+                      >
+                        {watchedValues.dropShadow ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <X className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-sm text-slate-400">
+                      {watchedValues.backgroundRemoved
+                        ? "Add realistic shadow"
+                        : "Requires background removal"}
+                    </p>
+                  </div>
+                </div>
+
                   {/* Aspect Ratio & Cropping */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-white flex items-center">
