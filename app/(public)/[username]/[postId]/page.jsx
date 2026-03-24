@@ -16,6 +16,7 @@ import {
   MessageCircle,
   Send,
   Trash2,
+  Share2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -130,6 +131,15 @@ const PostPage = ({ params }) => {
     }
   };
 
+  const handleShareLink = () => {
+    const url = `${window.location.origin}/${username}/${postId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success("Share link copied to clipboard!");
+    }).catch(() => {
+      toast.error("Failed to copy link");
+    });
+  };
+
   return (
     <div className="min-h-screen bg-slate-900 text-white">
       <PublicHeader link={`/${username}`} title="Back to Profile" />
@@ -235,6 +245,15 @@ const PostPage = ({ params }) => {
             >
               <Heart className={`h-5 w-5 ${hasLiked ? "fill-current" : ""}`} />
               {post.likeCount.toLocaleString()}
+            </Button>
+
+            <Button
+              onClick={handleShareLink}
+              variant="ghost"
+              className="flex items-center gap-2 text-slate-400 hover:text-white"
+            >
+              <Share2 className="h-5 w-5" />
+              Share
             </Button>
 
             <div className="flex items-center gap-2 text-slate-400">
