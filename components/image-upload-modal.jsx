@@ -50,8 +50,6 @@ const transformationSchema = z.object({
   textFontSize: z.number().min(12).max(200).default(50),
   textColor: z.string().default("#ffffff"),
   textPosition: z.string().default("center"),
-  backgroundRemoved: z.boolean().default(false),
-  dropShadow: z.boolean().default(false),
 });
 
 const ASPECT_RATIOS = [
@@ -106,8 +104,6 @@ export default function ImageUploadModal({
       textFontSize: 50,
       textColor: "#ffffff",
       textPosition: "center",
-      backgroundRemoved: false,
-      dropShadow: false,
     },
   });
 
@@ -188,16 +184,6 @@ export default function ImageUploadModal({
             focus: watchedValues.smartCropFocus,
           });
         }
-      }
-
-      // Background removal
-      if (watchedValues.backgroundRemoved) {
-        transformationChain.push({ effect: "removedotbg" });
-      }
-
-      // Drop shadow (only works with transparent background)
-      if (watchedValues.dropShadow && watchedValues.backgroundRemoved) {
-        transformationChain.push({ effect: "dropshadow" });
       }
 
       // Text overlay
