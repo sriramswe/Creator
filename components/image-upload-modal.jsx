@@ -644,7 +644,7 @@ export default function ImageUploadModal({
                 )}
               </div>
             </div>
-            </div>
+            
           </TabsContent>
         </Tabs>
       </DialogContent>
