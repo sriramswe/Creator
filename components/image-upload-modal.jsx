@@ -512,7 +512,8 @@ export default function ImageUploadModal({
                   </Button>
                 </div>
               </div>
-            </div>
+
+              {/* Image Preview */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-white flex items-center">
                   <ImageIcon className="h-5 w-5 mr-2" />
