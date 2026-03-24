@@ -14,10 +14,12 @@ import {
   Trash2,
   ExternalLink,
   Copy,
+  Share2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,6 +69,19 @@ const PostCard = ({
       return `/${post.author?.username || post?.username}/${post._id}`;
     }
     return null;
+  };
+
+  // Copy share link to clipboard
+  const handleShareLink = () => {
+    const url = publicUrl;
+    if (!url) return;
+    
+    const fullUrl = `${window.location.origin}${url}`;
+    navigator.clipboard.writeText(fullUrl).then(() => {
+      toast.success("Share link copied to clipboard!");
+    }).catch(() => {
+      toast.error("Failed to copy link");
+    });
   };
 
   const statusBadge = getStatusBadge(post);
@@ -138,12 +153,18 @@ const PostCard = ({
                     </DropdownMenuItem>
                   )}
                   {publicUrl && (
-                    <DropdownMenuItem asChild>
-                      <Link href={publicUrl} target="_blank">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        View Public
-                      </Link>
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href={publicUrl} target="_blank">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View Public
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleShareLink}>
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Share Link
+                      </DropdownMenuItem>
+                    </>
                   )}
                   {onDuplicate && (
                     <DropdownMenuItem onClick={() => onDuplicate(post)}>
