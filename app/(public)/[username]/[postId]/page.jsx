@@ -131,6 +131,25 @@ const PostPage = ({ params }) => {
     }
   };
 
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: post.title,
+          text: post.content.slice(0, 100).replace(/<[^>]*>/g, '') + "...",
+          url: url,
+        });
+      } catch (error) {
+        // User cancelled or error occurred
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard!");
+    }
+  };
+
   const handleShareLink = () => {
     const url = `${window.location.origin}/${username}/${postId}`;
     navigator.clipboard.writeText(url).then(() => {
@@ -248,7 +267,7 @@ const PostPage = ({ params }) => {
             </Button>
 
             <Button
-              onClick={handleShareLink}
+              onClick={handleShare}
               variant="ghost"
               className="flex items-center gap-2 text-slate-400 hover:text-white"
             >
