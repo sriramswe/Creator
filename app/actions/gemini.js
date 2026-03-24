@@ -1,12 +1,16 @@
 "use server";
 
 /**
- * Generate Blog Content using Ollama
+ * Generate Blog Content using OpenRouter
  */
 export async function generateBlogContent(title, category = "", tags = []) {
   try {
     if (!title || title.trim().length === 0) {
       throw new Error("Title is required to generate content");
+    }
+
+    if (!process.env.OPENROUTER_API_KEY) {
+      throw new Error("OpenRouter API key is not configured");
     }
 
     const prompt = `
@@ -25,24 +29,44 @@ Requirements:
 - Start with introduction
 `;
 
-    const response = await fetch("http://localhost:11434/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama2",
-        prompt: prompt,
-        stream: false,
-      }),
-    });
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "http://localhost:3000",
+          "X-Title": "Blog AI Generator",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          model: "openrouter/auto", // ✅ BEST
+          messages: [
+            {
+              role: "system",
+              content: "You are a professional blog writer. Return HTML content only."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1500
+        }),
+      }
+    );
+
+    const text = await response.text();
 
     if (!response.ok) {
-      throw new Error("Failed to connect to Ollama. Make sure Ollama is running on localhost:11434");
+      throw new Error(`OpenRouter Error: ${text}`);
     }
 
-    const data = await response.json();
-    const content = data.response?.trim();
+    const data = JSON.parse(text);
+
+    const content = data.choices?.[0]?.message?.content?.trim();
 
     if (!content || content.length < 100) {
       throw new Error("Generated content is too short");
@@ -50,7 +74,7 @@ Requirements:
 
     return {
       success: true,
-      content: content,
+      content,
     };
   } catch (error) {
     console.error("AI Error:", error);
@@ -63,7 +87,7 @@ Requirements:
 }
 
 /**
- * Improve Existing Content
+ * Improve Existing Content (OpenRouter)
  */
 export async function improveContent(
   currentContent,
@@ -74,8 +98,8 @@ export async function improveContent(
       throw new Error("Content is required");
     }
 
-    if (!process.env.GOOGLE_API_KEY) {
-      throw new Error("Google API key is not configured");
+    if (!process.env.OPENROUTER_API_KEY) {
+      throw new Error("OpenRouter API key is not configured");
     }
 
     let instruction = "";
@@ -103,27 +127,46 @@ Requirements:
 - Improve readability
 `;
 
-    const response = await fetch("http://localhost:11434/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama3",
-        prompt: prompt,
-        stream: false,
-      }),
-    });
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "http://localhost:3000",
+          "X-Title": "Blog AI Improver",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          model: "openrouter/auto", // ✅ SAFE
+          messages: [
+            {
+              role: "system",
+              content: "You are a content editor. Return improved HTML only."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.6,
+          max_tokens: 1500
+        }),
+      }
+    );
+
+    const text = await response.text();
 
     if (!response.ok) {
-      throw new Error("Failed to connect to Ollama");
+      throw new Error(`OpenRouter Error: ${text}`);
     }
 
-    const data = await response.json();
+    const data = JSON.parse(text);
 
     return {
       success: true,
-      content: data.response.trim(),
+      content: data.choices?.[0]?.message?.content?.trim(),
     };
   } catch (error) {
     console.error("Improve Error:", error);
